@@ -384,7 +384,7 @@ User request
 → create expert
 → initialize empty expert
 → begin background ingestion
-→ expert usable immediately
+→ expert usable after set up 100%
 → ingestion completes asynchronously
 ```
 
