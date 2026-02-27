@@ -1,437 +1,155 @@
-# Expert Runtime Knowledge System (ERKS)
+# Expert Runtime Knowledge System (ERKS) — High-Level Scope (updated)
 
-## High-Level Specification v0.1
+## 1. Overview
 
----
+The Expert Runtime Knowledge System (ERKS) is an embeddable, MCP-native runtime for creating isolated per-source knowledge units ("subagents"). Each subagent ingests a single source, builds a vector index (and optionally a knowledge graph), and answers queries grounded in its source content. The orchestrator exposes a minimal MCP toolset so coding agents can dynamically add sources, query knowledge, and enumerate known subagents.
 
-# 1. Overview
-
-The Expert Runtime Knowledge System (ERKS) is an embeddable, MCP-native knowledge runtime that dynamically ingests external sources (websites, repositories, documents) and exposes them as isolated "Expert Agents" capable of answering queries using retrieval-augmented generation (RAG).
-
-The system is designed to support coding agents and other AI systems by providing real-time, source-grounded expertise generated on demand.
-
-ERKS must support:
-
-* Dynamic knowledge ingestion at runtime
-* Semantic retrieval via embeddings
-* Knowledge graph construction
-* Expert isolation per source
-* MCP-compatible interface
-* Embeddable runtime core (C++ target, Python prototype)
+MVP focus:
+- deterministic, testable behavior
+- local/in-process components (no distributed backend)
+- predictable lifecycle semantics for ingestion and querying
 
 ---
 
-# 2. Goals
+## 2. Primary decisions for MVP
 
-## 2.1 Primary Goals
-
-* Dynamically create "Expert Agents" from arbitrary sources
-* Provide fast semantic retrieval from ingested knowledge
-* Expose system functionality via MCP protocol
-* Support coding agents as primary clients
-* Operate locally or embedded without external infrastructure
-
-## 2.2 Secondary Goals
-
-* Enable progressive ingestion (expert usable immediately)
-* Support hybrid vector + graph retrieval
-* Allow multi-expert orchestration
-* Provide deterministic and reproducible retrieval
+- Source types implemented: only `git` and `http(s)`.
+- `add_source` semantics: blocking; performs full ingestion pipeline synchronously and returns final status (`ready` / `failed`) or an MCP-level error if the request is rejected (for example when the cap is exceeded).
+- `list_sources` semantics: returns all known subagents and their status (including `pending` / `ingesting` / `ready` / `failed`). This is the single place to inspect system state for MVP.
+- Subagent count cap: configurable `max_subagents` with a default of `20`. The orchestrator must reject `add_source` requests that would raise the total count above `max_subagents`. Reingest/update requests that supply an existing `source_id` do not increase count.
+- Query routing: `query` routes to all `ready` subagents in parallel and uses the orchestrator tie-breaking logic only at query-time (not during listing).
+- Determinism: tests must be deterministic — seeded embedding stub and deterministic tie-breakers for answering queries.
 
 ---
 
-# 3. Non-Goals (MVP)
+## 3. Definitions
 
-The following are explicitly out of scope for MVP:
+- Subagent
+  - A single-source knowledge runtime unit.
+  - Maintains its own:
+    - vector index (embedding store)
+    - chunk store / metadata
+    - optional knowledge graph
+    - retriever + answer generator
+  - Identified by stable `subagent_id`. Clients may provide `source_id` to request idempotent updates.
 
-* Distributed multi-node deployment
-* GUI interface
-* Authentication or multi-tenant isolation
-* Perfect knowledge graph extraction
-* Full symbolic reasoning engine
+- Knowledge Source (MVP)
+  - Only `git` repositories and `http(s)` websites are supported.
+  - `git` ingestion may accept `auth_secret_id` referencing operator-managed secrets; secrets must not be logged.
 
----
-
-# 4. Definitions
-
-## Subagent
-
-A subagent is an isolated runtime knowledge unit derived from a single logical source. Each subagent is strictly tied to one source (e.g., a website, repository, or document) and cannot combine multiple sources.
-
-Examples:
-
-* WebsiteSubagent("docs.example.com")
-* GitRepoSubagent("github.com/org/repo")
-* DocsSubagent("/local/docs")
-
-Each subagent maintains independent:
-
-* vector index
-* knowledge graph
-* metadata store
-* retrieval pipeline
-
-Throughout this document, "subagent" replaces the previous term "Expert Agent" for clarity and consistency.
+- Status values
+  - `pending` — newly created, not yet started
+  - `ingesting` / `initializing` — ingestion in progress
+  - `ready` — ingestion succeeded and subagent is queryable
+  - `failed` — ingestion failed; `last_error` is recorded
 
 ---
 
-## Knowledge Source
+## 4. System architecture (concise)
 
-A Knowledge Source is any ingestible content location.
-
-Supported types:
-
-* Website
-* Git repository
-* Local directory
-* PDF / documents
-* API endpoint
-
-Each subagent is strictly single-source; multi-source subagents are not supported.
+- Client (Coding Agent) → MCP Server (`FastMCP`) → Orchestrator → Subagents
+- MCP tools (MVP):
+  - `add_source(source_config)` → blocks until ingestion completes or fails (or is rejected due to cap)
+  - `query({ query })` → returns best answer selected across subagents
+  - `list_sources()` → returns all known subagents and metadata
 
 ---
 
-## Chunk
+## 5. Ingestion lifecycle (MVP)
 
-Smallest retrieval unit.
+- `add_source(source_config)` performs:
+  1. Validation (type must be `git` or `http(s)`)
+  2. Cap check: if `current_count >= max_subagents` and the request does not reference an existing `source_id`, reject the request with an MCP-level error indicating the cap has been reached.
+     - If `source_id` references an existing subagent, treat as a reingest/update (allowed even when at cap).
+  3. Resolve credentials (for `git` only) from secrets store (never logged).
+  4. Fetch content (clone or HTTP fetch).
+  5. Document extraction (including PDF text extraction attempts; images/OCR out of scope).
+  6. Chunking (token-window defaults: 500 tokens target, 50 overlap, min 64).
+  7. Embedding generation (single configured model; deterministic stub used in tests).
+  8. Index build and optional knowledge graph.
+  9. Persist artifacts to storage and mark `ready`. On failure, persist partial artifacts to `failed_path` and return `failed`.
 
-Structure:
-
-```
-Chunk {
-  id: string
-  text: string
-  embedding: vector<float>
-  metadata: map<string, string>
-}
-```
-
----
-
-# 5. System Architecture
+- Ingestion timeout: default 60s (configurable).
 
 ---
 
-## 5.1 Subagent Orchestration Logic
+## 6. Subagent persistence & failures
 
-- Each subagent is conceptualized as a small LLM agent sitting atop its own knowledge graph and vector index, capable of answering questions based solely on its single source.
-- Subagents act as “friends” in a “Who Wants to Be a Millionaire” scenario: the main system (coding agent) asks a question, and each subagent responds with an answer and a confidence score.
-- The orchestrator collects all answers, compares confidence scores, and returns the highest-confidence answer to the coding agent.
-- When a query arrives, the orchestrator routes it to all active subagents in parallel.
-- Each subagent generates an answer and a confidence score using a standard formula (cosine similarity + keywords).
-- The orchestrator selects the answer with the highest confidence and returns it to the client.
-- For MVP, this mechanism is simple: round-robin all subagents, parallel answer generation, pick highest confidence.
+- On failure, partial artifacts and diagnostics are preserved under configured `storage.failed_path` for operator debugging.
+- `list_sources` will include failed subagents and their `last_error` value for operator visibility.
+- The orchestrator must never log secrets or plaintext credentials.
 
 ---
 
-## 5.2 Dynamic Source Ingestion
+## 7. Cap (`max_subagents`) behavior
 
-- The system must support appending new sources at runtime via the MCP interface.
-- Upon ingestion, a new subagent is initialized and added to the orchestrator’s pool.
-- Subagents are only available for queries once ingestion is 100% complete; no partial answers are allowed for simplicity.
-- Example: Coding agent requests Java documentation as a new source. The orchestrator downloads the content, builds a knowledge graph/vector index, and spins up a new subagent for that source. After initialization, queries can be routed to this new subagent alongside existing ones.
-
----
-
-## 5.3 Example Scenario
-
-```
-Coding Agent → MCP Server → Orchestrator
-→ [Subagent(JavaDocs), Subagent(PythonDocs), Subagent(StackOverflow)]
-→ Each subagent answers with confidence
-→ Orchestrator picks highest confidence
-→ Returns answer to Coding Agent
-```
-
-## 5.4 High-Level Architecture
-
-```
-Client (Coding Agent)
-        │
-        ▼
-    MCP Server Layer
-        │
-        ▼
- Expert Orchestrator
-   │      │      │
-   ▼      ▼      ▼
-Expert  Expert  Expert
-Agent   Agent   Agent
-   │
-   ▼
-Vector Index + Knowledge Graph
-```
+- Configurable orchestrator key: `orchestrator.max_subagents` (default: `20` in the default config).
+- `add_source` must check the current registry size (counting all subagents across statuses).
+- If `add_source` would increase total beyond `max_subagents`:
+  - If `source_id` is present and matches an existing subagent → treat as update (allowed; does not increase count).
+  - Otherwise → reject the request with an MCP-level error indicating `max_subagents` has been reached.
+- This enforces a hard upper bound for MVP and makes resource planning deterministic.
 
 ---
 
-## 5.5 Core Components
+## 8. Query-time behavior & tie-breaking
 
-### 5.5.1 MCP Server Layer
-
-Responsibilities:
-
-* Expose MCP tools
-* Handle requests from clients
-* Route queries to orchestrator
-
-Required tools:
-
-* add_source
-* query
-* list_sources
-
-Only these three tools are required for MVP. `add_source` creates a new subagent, `query` routes a question to all subagents and returns the highest-confidence answer, and `list_sources` returns all active sources/subagents.
+- `query` is sent to all `ready` subagents in parallel (respecting the configured query timeout — default 500ms).
+- Each subagent returns an (answer, confidence, provenance).
+- The orchestrator selects the primary answer using the configured tie-breaking rules (confidence desc, created_at asc, subagent_id asc) — applied only at query selection time, not during `list_sources`.
 
 ---
 
-### 5.5.2 Subagent Orchestrator
+## 9. MCP responses & error semantics
 
-Responsibilities:
-
-* Create subagents
-* Destroy subagents
-* Route queries to all subagents (round-robin for MVP)
-* Aggregate responses
-
-Interface:
-
-```
-add_source(source_config) → subagent_id
-query(query_string) → response
-list_sources() → source_list
-```
+- `add_source`:
+  - On success: returns `{ subagent_id, status: "ready" }` (or `failed` and `last_error` when ingestion fails).
+  - On cap-rejection: returns an MCP-level error (non-2xx) with a clear machine-readable message stating that the `max_subagents` limit was exceeded.
+- `list_sources`: returns the full registry with `subagent_id`, `name`, `type`, `location`, `status`, `created_at`, `last_updated`, and optional `last_error`.
+- `query`: returns the selected answer and provenance; includes meta about latency and per-subagent errors.
 
 ---
 
-### 5.5.3 Subagent
+## 10. Config example (keys to include)
 
-Responsibilities:
+Include the following under your orchestrator config (YAML or chosen format):
 
-* Ingest source content
-* Generate embeddings
-* Build vector index
-* Build knowledge graph (included in MVP)
-* Perform retrieval
-* Generate context
+- `orchestrator.max_subagents` — integer (default: 20)
+- `orchestrator.max_concurrent_ingestions` — integer (default: 2)
+- `orchestrator.default_ingestion_timeout_seconds` — integer (default: 60)
+- `orchestrator.default_embedding_model` — string
+- `orchestrator.embedding_batch_size` — integer (default: 64)
+- `log.path`, `log.max_bytes`, `log.backup_count`
+- `storage.base_path`, `storage.failed_path`
+- `secrets.path` (file-backed store for MVP)
 
-Internal components:
-
-```
-Subagent {
-  DataSource
-  ChunkStore
-  EmbeddingModel
-  VectorIndex
-  KnowledgeGraph
-  Retriever
-}
-```
+(Implementations must validate config on startup and enforce `max_subagents` at `add_source` time.)
 
 ---
 
-### 5.5.4 Data Ingestion Pipeline
+## 11. Testing & determinism requirements
 
-Pipeline stages:
-
-1. Fetch content
-2. Parse content
-3. Chunk content
-4. Generate embeddings
-5. Insert into index
-6. Update knowledge graph
-
-Subagents are only available for queries after ingestion is 100% complete.
+- Deterministic embedding stub for tests (seeded SHA-based vector).
+- Tests should cover:
+  - Cap enforcement (attempt to add `max_subagents + 1` yields MCP-level error).
+  - Reingest with same `source_id` allowed even at cap.
+  - `list_sources` returns all agents and includes failure info.
+  - `add_source` blocking behavior and ingestion timeout behavior.
+  - Only `git` and `http(s)` are accepted; other types rejected.
 
 ---
 
-### 5.5.5 Embedding Model
+## 12. Notes & rationale
 
-Responsibilities:
-
-* Convert text to semantic vectors
-
-Requirements:
-
-* Local model support
-* Batch embedding capability
-* Deterministic outputs
-
-MVP model recommendation:
-
-* BGE-small-en-v1.5
-
-Confidence scoring for retrieval uses a standard formula: cosine similarity plus keyword presence.
+- Restricting to `git` and `http(s)` simplifies the MVP ingestion pipeline while leaving room to expand source types later.
+- Returning all subagents from `list_sources` (including failed ones) provides operators full visibility through the public MCP tool in MVP and simplifies CI assertions.
+- The `max_subagents` cap prevents uncontrolled resource use in early deployments and keeps behavior deterministic and testable.
+- Blocking `add_source` keeps client expectations simple for the MVP; asynchronous ingestion can be added later when an explicit progress API is available.
 
 ---
 
-### 5.5.6 Vector Index
+If you want, I will now:
+- update the other spec files to reflect these exact decisions, or
+- produce a merged canonical spec document and the MCP/protobuf IDL that matches this behavior.
 
-Responsibilities:
-
-* Store embeddings
-* Perform nearest neighbor search
-
-Required operations:
-
-```
-add(vector, chunk_id)
-search(query_vector, k)
-remove(chunk_id)
-```
-
-Performance targets:
-
-* Query latency: < 100 ms
-* Insert latency: < 5 ms per chunk
-
----
-
-### 5.5.7 Knowledge Graph
-
-Responsibilities:
-
-* Store relationships between entities
-
-Example relationships:
-
-* class → defined_in → file
-* function → calls → function
-* module → imports → module
-
-Knowledge graph construction is included in MVP unless it adds prohibitive complexity.
-
----
-
-### 5.5.8 Retriever
-
-Responsibilities:
-
-* Convert query to embedding
-* Retrieve relevant chunks
-* Assemble context
-
-Pipeline:
-
-```
-query → embedding → vector search → context assembly
-```
-
----
-
-# 6. MCP Interface Specification
-
-## Tool: add_source
-
-Creates new subagent.
-
-Arguments:
-
-```
-{
-  name: string
-  type: string
-  location: string
-}
-```
-
-Returns:
-
-```
-{
-  subagent_id: string
-  status: string
-}
-```
-
----
-
-## Tool: query
-
-Queries all subagents and returns the highest-confidence answer.
-
-Arguments:
-
-```
-{
-  query: string
-}
-```
-
-Returns:
-
-```
-{
-  answer: string
-  sources: list
-  confidence: float
-}
-```
-
----
-
-## Tool: list_sources
-
-Returns all sources/subagents.
-
----
-
-# 7. Runtime Behavior
-
-## 7.1 Expert Creation Flow
-
-```
-User request
-→ create expert
-→ initialize empty expert
-→ begin background ingestion
-→ expert usable after set up 100%
-→ ingestion completes asynchronously
-```
-
----
-
-## 7.2 Query Flow
-
-```
-User query
-→ MCP server
-→ orchestrator
-→ expert agent
-→ embedding generation
-→ vector search
-→ context assembly
-→ return context
-→ LLM generates answer
-```
-
----
-
-# 8. Performance Requirements
-
-MVP targets:
-
-Expert usable:
-
-* < 5 seconds
-
-Query latency:
-
-* < 500 ms
-
-Memory usage per expert:
-
-* < 500 MB
-
-Concurrent experts supported:
-
-* ≥ 10
-
-# 9. Success Criteria
-
-MVP considered successful when:
-
-* Coding agent can dynamically ingest website
-* Subagent created in < 10 seconds
-* Subagent can answer queries correctly (ideally grounded in source chunks; correctness benchmarks are desirable if available)
-* System accessible via MCP
-* Multiple subagents can coexist
+Tell me which next step you prefer and I’ll proceed.
