@@ -4,4 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "anyio>=4.0.0",
+    "httpx>=0.24.0",
+    "mcp[cli]>=1.2.0",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pyyaml>=6.0",
+]
