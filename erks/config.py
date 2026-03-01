@@ -54,11 +54,25 @@ class SecretsConfig:
 
 
 @dataclasses.dataclass
+class LLMConfig:
+    provider: str = "openrouter"
+    api_key: str = ""
+    subagent_model: str = "openrouter/openai/gpt-4o-mini"
+    orchestrator_model: str = "openrouter/openai/gpt-4o"
+    subagent_timeout_seconds: float = 15.0
+
+    def __post_init__(self):
+        if self.subagent_timeout_seconds <= 0:
+            raise ValueError("subagent_timeout_seconds must be > 0")
+
+
+@dataclasses.dataclass
 class Config:
     orchestrator: OrchestratorConfig = dataclasses.field(default_factory=OrchestratorConfig)
     log: LogConfig = dataclasses.field(default_factory=LogConfig)
     storage: StorageConfig = dataclasses.field(default_factory=StorageConfig)
     secrets: SecretsConfig = dataclasses.field(default_factory=SecretsConfig)
+    llm: LLMConfig = dataclasses.field(default_factory=LLMConfig)
 
     @classmethod
     def from_yaml(cls, path: str) -> "Config":
@@ -69,7 +83,8 @@ class Config:
         log = LogConfig(**data.get("log", {}))
         storage = StorageConfig(**data.get("storage", {}))
         secrets = SecretsConfig(**data.get("secrets", {}))
-        return cls(orchestrator=orchestrator, log=log, storage=storage, secrets=secrets)
+        llm = LLMConfig(**data.get("llm", {}))
+        return cls(orchestrator=orchestrator, log=log, storage=storage, secrets=secrets, llm=llm)
 
     @classmethod
     def default(cls) -> "Config":
