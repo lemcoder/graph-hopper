@@ -1,8 +1,8 @@
 """Configuration dataclasses for ERKS."""
+
 from __future__ import annotations
 
 import dataclasses
-from typing import Optional
 import yaml
 
 
@@ -68,7 +68,9 @@ class LLMConfig:
 
 @dataclasses.dataclass
 class Config:
-    orchestrator: OrchestratorConfig = dataclasses.field(default_factory=OrchestratorConfig)
+    orchestrator: OrchestratorConfig = dataclasses.field(
+        default_factory=OrchestratorConfig
+    )
     log: LogConfig = dataclasses.field(default_factory=LogConfig)
     storage: StorageConfig = dataclasses.field(default_factory=StorageConfig)
     secrets: SecretsConfig = dataclasses.field(default_factory=SecretsConfig)
@@ -84,7 +86,13 @@ class Config:
         storage = StorageConfig(**data.get("storage", {}))
         secrets = SecretsConfig(**data.get("secrets", {}))
         llm = LLMConfig(**data.get("llm", {}))
-        return cls(orchestrator=orchestrator, log=log, storage=storage, secrets=secrets, llm=llm)
+        return cls(
+            orchestrator=orchestrator,
+            log=log,
+            storage=storage,
+            secrets=secrets,
+            llm=llm,
+        )
 
     @classmethod
     def default(cls) -> "Config":

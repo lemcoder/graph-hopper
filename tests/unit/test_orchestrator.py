@@ -1,12 +1,10 @@
 import pytest
-import asyncio
 from erks.config import Config
 from erks.models import (
     SourceConfig,
     SourceType,
     SubagentStatus,
     CapExceededError,
-    ValidationError as ErksValidationError,
 )
 from erks.orchestrator.in_memory import InMemoryOrchestrator
 from erks.subagent.ingestion import IngestionPipeline, DeterministicEmbedder
@@ -25,12 +23,18 @@ def orchestrator(config):
     return InMemoryOrchestrator(config, pipeline)
 
 
-def make_git_config(name="test", location="https://github.com/example/repo.git", source_id=None):
-    return SourceConfig(type=SourceType.GIT, location=location, name=name, source_id=source_id)
+def make_git_config(
+    name="test", location="https://github.com/example/repo.git", source_id=None
+):
+    return SourceConfig(
+        type=SourceType.GIT, location=location, name=name, source_id=source_id
+    )
 
 
 def make_http_config(name="test", location="https://example.com/docs", source_id=None):
-    return SourceConfig(type=SourceType.HTTP, location=location, name=name, source_id=source_id)
+    return SourceConfig(
+        type=SourceType.HTTP, location=location, name=name, source_id=source_id
+    )
 
 
 @pytest.mark.asyncio
@@ -65,7 +69,9 @@ async def test_cap_enforcement(orchestrator, config):
 
     with pytest.raises(CapExceededError) as exc_info:
         await orchestrator.add_source(
-            make_git_config(name="over_cap", location="https://github.com/example/repox.git")
+            make_git_config(
+                name="over_cap", location="https://github.com/example/repox.git"
+            )
         )
 
     assert exc_info.value.current_count == config.orchestrator.max_subagents

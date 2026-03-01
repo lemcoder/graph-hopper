@@ -1,4 +1,5 @@
 """FastMCP server implementing three tools: add_source, query, list_sources."""
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,9 @@ from erks.orchestrator.interface import OrchestratorInterface
 logger = logging.getLogger(__name__)
 
 
-def create_mcp_server(orchestrator: OrchestratorInterface, name: str = "ERKS") -> FastMCP:
+def create_mcp_server(
+    orchestrator: OrchestratorInterface, name: str = "ERKS"
+) -> FastMCP:
     """Factory that creates a FastMCP server wired to the given orchestrator."""
     mcp = FastMCP(name)
 
@@ -86,15 +89,23 @@ def create_mcp_server(orchestrator: OrchestratorInterface, name: str = "ERKS") -
         sources = []
         for s in result.sources:
             d = s.model_dump(exclude_none=False)
-            d["created_at"] = d["created_at"].isoformat() if d.get("created_at") else None
+            d["created_at"] = (
+                d["created_at"].isoformat() if d.get("created_at") else None
+            )
             d["last_updated"] = (
                 d["last_updated"].isoformat() if d.get("last_updated") else None
             )
-            d["type"] = d["type"].value if hasattr(d.get("type"), "value") else d.get("type")
-            d["status"] = (
-                d["status"].value if hasattr(d.get("status"), "value") else d.get("status")
+            d["type"] = (
+                d["type"].value if hasattr(d.get("type"), "value") else d.get("type")
             )
-            sources.append({k: v for k, v in d.items() if v is not None or k == "last_error"})
+            d["status"] = (
+                d["status"].value
+                if hasattr(d.get("status"), "value")
+                else d.get("status")
+            )
+            sources.append(
+                {k: v for k, v in d.items() if v is not None or k == "last_error"}
+            )
         return {
             "sources": sources,
             "total": result.total,

@@ -1,4 +1,5 @@
 """FAISS-backed vector store for a single subagent's chunk embeddings."""
+
 from __future__ import annotations
 
 import json
@@ -71,7 +72,9 @@ class VectorStore:
     # Search
     # ------------------------------------------------------------------
 
-    def search(self, query_vector: list[float], k: int = 5) -> list[tuple[Chunk, float]]:
+    def search(
+        self, query_vector: list[float], k: int = 5
+    ) -> list[tuple[Chunk, float]]:
         """Return up to *k* ``(Chunk, cosine_similarity)`` pairs, highest first.
 
         If fewer than *k* chunks exist all of them are returned.  Ties are

@@ -1,9 +1,9 @@
 """Tests for spec 09 – multi-subagent query orchestration."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -102,7 +102,9 @@ async def test_aquery_empty_store_returns_zero_confidence():
 
 @pytest.mark.asyncio
 async def test_aquery_sources_contain_chunk_metadata():
-    sa = _build_subagent("sa_1", ["function foo returns int", "class Bar has method baz"])
+    sa = _build_subagent(
+        "sa_1", ["function foo returns int", "class Bar has method baz"]
+    )
     resp = await sa.aquery("function foo")
     assert len(resp.sources) > 0
     for src in resp.sources:
@@ -112,7 +114,9 @@ async def test_aquery_sources_contain_chunk_metadata():
 
 @pytest.mark.asyncio
 async def test_aquery_uses_llm_response():
-    sa = _build_subagent("sa_1", ["relevant content here"], llm_response="custom answer")
+    sa = _build_subagent(
+        "sa_1", ["relevant content here"], llm_response="custom answer"
+    )
     resp = await sa.aquery("content")
     assert resp.answer == "custom answer"
 
@@ -148,6 +152,7 @@ def config():
 @pytest.fixture
 def orchestrator(config):
     from erks.subagent.ingestion import IngestionPipeline
+
     pipeline = IngestionPipeline(DeterministicEmbedder(seed="test"))
     return InMemoryOrchestrator(config, pipeline, llm=MockLLM("mock answer"))
 
@@ -178,15 +183,23 @@ async def test_orchestrator_query_returns_highest_confidence():
     cfg = _cfg(query_timeout_ms=5000)
 
     # Build two subagents manually and inject
-    sa_low = _build_subagent("sa_low", ["irrelevant content xyz"], llm_response="low answer", seed="low")
-    sa_high = _build_subagent("sa_high", ["python programming guide"], llm_response="high answer", seed="high")
+    sa_low = _build_subagent(
+        "sa_low", ["irrelevant content xyz"], llm_response="low answer", seed="low"
+    )
+    sa_high = _build_subagent(
+        "sa_high", ["python programming guide"], llm_response="high answer", seed="high"
+    )
 
     # Give sa_high a higher confidence by patching aquery
     async def _high_query(q):
-        return SubagentResponse(subagent_id="sa_high", answer="high answer", confidence_score=0.9)
+        return SubagentResponse(
+            subagent_id="sa_high", answer="high answer", confidence_score=0.9
+        )
 
     async def _low_query(q):
-        return SubagentResponse(subagent_id="sa_low", answer="low answer", confidence_score=0.1)
+        return SubagentResponse(
+            subagent_id="sa_low", answer="low answer", confidence_score=0.1
+        )
 
     sa_low.aquery = _low_query  # type: ignore[method-assign]
     sa_high.aquery = _high_query  # type: ignore[method-assign]

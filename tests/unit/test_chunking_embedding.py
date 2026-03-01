@@ -1,4 +1,5 @@
 """Tests for spec 04 – token-window chunking and embedding."""
+
 from __future__ import annotations
 
 import pytest
@@ -46,7 +47,14 @@ def test_chunk_default_metadata_is_empty_dict():
 
 
 def test_chunk_from_dict_no_metadata():
-    d = {"text": "hi", "doc_id": "d", "chunk_index": 0, "url_or_path": "", "token_count": 1, "metadata": {}}
+    d = {
+        "text": "hi",
+        "doc_id": "d",
+        "chunk_index": 0,
+        "url_or_path": "",
+        "token_count": 1,
+        "metadata": {},
+    }
     chunk = Chunk.from_dict(d)
     assert chunk.metadata == {}
 
@@ -185,7 +193,11 @@ def test_chunker_custom_encode_decode():
     encode = list
     decode = "".join
     chunker = TokenWindowChunker(
-        encode_fn=encode, decode_fn=decode, target_tokens=4, overlap_tokens=1, min_tokens=2
+        encode_fn=encode,
+        decode_fn=decode,
+        target_tokens=4,
+        overlap_tokens=1,
+        min_tokens=2,
     )
     text = "abcdefgh"  # 8 chars
     chunks = chunker.chunk(text, doc_id="d")
@@ -206,7 +218,9 @@ async def test_pipeline_returns_ingestion_result():
     from erks.models import SourceConfig, SourceType
 
     pipeline = IngestionPipeline(DeterministicEmbedder(seed="t", dim=16))
-    cfg = SourceConfig(type=SourceType.GIT, location="https://github.com/example/repo.git")
+    cfg = SourceConfig(
+        type=SourceType.GIT, location="https://github.com/example/repo.git"
+    )
     result = await pipeline.ingest(cfg)
     assert isinstance(result, IngestionResult)
     assert len(result.chunks) > 0

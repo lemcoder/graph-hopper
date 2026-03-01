@@ -1,4 +1,5 @@
 """Orchestrator protocol definition."""
+
 from typing import Protocol, runtime_checkable
 
 from erks.models import SourceConfig, AddSourceResult, QueryResult, ListSourcesResult

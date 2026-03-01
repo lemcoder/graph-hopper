@@ -1,4 +1,5 @@
 """Ingestion pipeline, chunking, and embedding implementations."""
+
 from __future__ import annotations
 
 import hashlib
@@ -42,7 +43,9 @@ class DeterministicEmbedder:
 class FastEmbedder:
     """Production embedder backed by fastembed (ONNX, local CPU inference)."""
 
-    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5", batch_size: int = 64):
+    def __init__(
+        self, model_name: str = "BAAI/bge-small-en-v1.5", batch_size: int = 64
+    ):
         self._model_name = model_name
         self._batch_size = batch_size
         self._model = None  # lazy-loaded
@@ -50,6 +53,7 @@ class FastEmbedder:
     def _load(self):
         if self._model is None:
             from fastembed import TextEmbedding  # type: ignore
+
             self._model = TextEmbedding(model_name=self._model_name)
 
     def embed(self, texts: list[str]) -> list[list[float]]:
@@ -111,8 +115,12 @@ class TokenWindowChunker:
         overlap_tokens: int = 50,
         min_tokens: int = 64,
     ):
-        self._encode: Callable[[str], list] = encode_fn if encode_fn is not None else lambda t: t.split()
-        self._decode: Callable[[list], str] = decode_fn if decode_fn is not None else lambda toks: " ".join(toks)
+        self._encode: Callable[[str], list] = (
+            encode_fn if encode_fn is not None else lambda t: t.split()
+        )
+        self._decode: Callable[[list], str] = (
+            decode_fn if decode_fn is not None else lambda toks: " ".join(toks)
+        )
         self.target_tokens = target_tokens
         self.overlap_tokens = overlap_tokens
         self.min_tokens = min_tokens
@@ -183,7 +191,9 @@ class IngestionPipeline:
 
     async def ingest(self, source_config) -> IngestionResult:
         text = f"Source: {source_config.location}"
-        chunks = self.chunker.chunk(text, doc_id="doc_0", url_or_path=source_config.location)
+        chunks = self.chunker.chunk(
+            text, doc_id="doc_0", url_or_path=source_config.location
+        )
         if not chunks:
             # Fallback for trivially small documents
             chunks = [
