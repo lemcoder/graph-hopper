@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
 from erks.models import (
-    SourceConfig,
     SourceType,
     SubagentStatus,
     SubagentRecord,
@@ -10,7 +9,6 @@ from erks.models import (
     QueryResult,
     ListSourcesResult,
     CapExceededError,
-    ValidationError as ErksValidationError,
 )
 from erks.server.mcp_server import create_mcp_server
 
@@ -23,7 +21,9 @@ def make_mock_orchestrator():
     return orch
 
 
-def make_subagent_record(subagent_id="sa_001", status=SubagentStatus.READY, last_error=None):
+def make_subagent_record(
+    subagent_id="sa_001", status=SubagentStatus.READY, last_error=None
+):
     now = datetime.now(timezone.utc)
     return SubagentRecord(
         subagent_id=subagent_id,
@@ -171,7 +171,9 @@ def test_list_sources_returns_all():
     orch = make_mock_orchestrator()
     records = [
         make_subagent_record("sa_001", SubagentStatus.READY),
-        make_subagent_record("sa_002", SubagentStatus.FAILED, last_error="connection failed"),
+        make_subagent_record(
+            "sa_002", SubagentStatus.FAILED, last_error="connection failed"
+        ),
     ]
     orch.list_sources.return_value = ListSourcesResult(
         sources=records, total=2, max_allowed=20

@@ -1,9 +1,9 @@
 """
 Integration tests for the ERKS MCP server using in-memory orchestrator.
 """
+
 import pytest
 from erks.config import Config
-from erks.models import SourceType, SubagentStatus, CapExceededError
 from erks.orchestrator.in_memory import InMemoryOrchestrator
 from erks.subagent.ingestion import IngestionPipeline, DeterministicEmbedder
 from erks.server.mcp_server import create_mcp_server

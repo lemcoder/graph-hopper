@@ -1,4 +1,5 @@
 """Shared Pydantic models and exceptions for ERKS."""
+
 from __future__ import annotations
 
 from datetime import datetime

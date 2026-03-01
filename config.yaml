@@ -1,0 +1,75 @@
+# ERKS Configuration File
+#
+# Copy this file, edit the values, and point the server at it:
+#
+#   export ERKS_CONFIG_PATH=/path/to/your/config.yaml
+#   uvicorn main:app --host 0.0.0.0 --port 8000
+#
+# All keys are optional – omitted keys fall back to the built-in defaults
+# shown below.
+
+orchestrator:
+  # Maximum number of subagents (knowledge sources) that can be registered.
+  max_subagents: 20
+
+  # How many sources can be ingested at the same time.
+  max_concurrent_ingestions: 2
+
+  # How long (in seconds) a single ingestion is allowed to take before it
+  # is marked as failed.
+  default_ingestion_timeout_seconds: 60
+
+  # Embedding model identifier passed to the embedder backend.
+  default_embedding_model: "BAAI/bge-small-en-v1.5"
+
+  # Number of texts embedded in a single batch.
+  embedding_batch_size: 64
+
+  # Maximum time (in milliseconds) allowed for a query round-trip across
+  # all subagents.
+  query_timeout_ms: 500
+
+log:
+  # Override these paths when running as a regular (non-root) user, e.g. on a
+  # Raspberry Pi where /var/log/ may not be writable.
+  path: "/var/log/graph-hopper/orchestrator.log"
+  # path: "logs/orchestrator.log"   # ← user-writable alternative
+
+  # Maximum size of a single log file before rotation (bytes).  100 MB default.
+  max_bytes: 104857600
+
+  # Number of rotated backup log files to keep.
+  backup_count: 5
+
+storage:
+  # Where per-subagent data (FAISS index + chunks.json) is persisted.
+  # Override to a user-writable path when not running as root.
+  base_path: "/var/lib/graph-hopper/subagents"
+  # base_path: "data/subagents"   # ← user-writable alternative
+
+  failed_path: "/var/lib/graph-hopper/subagents/failed"
+  # failed_path: "data/subagents/failed"
+
+secrets:
+  # How the application retrieves secrets (currently only "file" is supported).
+  store_type: "file"
+  path: "/etc/graph-hopper/secrets.yaml"
+  # path: "config/secrets.yaml"   # ← user-writable alternative
+
+llm:
+  # LLM provider.  Currently "openrouter" is the supported provider.
+  provider: "openrouter"
+
+  # Your OpenRouter (or other provider) API key.
+  # It is safer to set this via the OPENROUTER_API_KEY environment variable
+  # rather than storing it in this file.
+  api_key: ""
+
+  # Model used by individual subagents for answer generation.
+  subagent_model: "openrouter/openai/gpt-4o-mini"
+
+  # Model used by the orchestrator for meta-level reasoning.
+  orchestrator_model: "openrouter/openai/gpt-4o"
+
+  # Maximum time (in seconds) a single LLM completion call may take.
+  subagent_timeout_seconds: 15.0

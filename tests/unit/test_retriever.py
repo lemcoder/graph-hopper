@@ -1,7 +1,7 @@
 """Tests for spec 07 – Retriever."""
+
 from __future__ import annotations
 
-import pytest
 
 from erks.subagent.ingestion import Chunk, DeterministicEmbedder
 from erks.subagent.retriever import Retriever
@@ -13,7 +13,9 @@ from erks.subagent.vector_store import VectorStore
 # ---------------------------------------------------------------------------
 
 
-def _build_store(texts: list[str], seed: str = "test") -> tuple[VectorStore, DeterministicEmbedder]:
+def _build_store(
+    texts: list[str], seed: str = "test"
+) -> tuple[VectorStore, DeterministicEmbedder]:
     emb = DeterministicEmbedder(seed=seed, dim=64)
     chunks = [
         Chunk(text=t, doc_id=f"doc_{i}", chunk_index=i, url_or_path=f"/file_{i}.py")
@@ -64,7 +66,12 @@ def test_format_context_empty_results():
 
 
 def test_format_context_has_correct_tags():
-    chunk = Chunk(text="def foo():\n    pass", doc_id="123", chunk_index=0, url_or_path="src/foo.py")
+    chunk = Chunk(
+        text="def foo():\n    pass",
+        doc_id="123",
+        chunk_index=0,
+        url_or_path="src/foo.py",
+    )
     xml = Retriever.format_context([(chunk, 0.89)])
     assert "<context>" in xml
     assert "</context>" in xml

@@ -1,4 +1,5 @@
 """Hybrid confidence scorer: 70% cosine similarity + 30% keyword overlap."""
+
 from __future__ import annotations
 
 import string

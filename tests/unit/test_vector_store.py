@@ -1,4 +1,5 @@
 """Tests for spec 05 – VectorStore (FAISS-backed)."""
+
 from __future__ import annotations
 
 import os

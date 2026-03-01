@@ -1,4 +1,5 @@
 """In-memory orchestrator implementation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,7 +49,9 @@ class InMemoryOrchestrator:
         self._subagent_instances: dict[str, Subagent] = {}
         self._pipeline = pipeline or IngestionPipeline(DeterministicEmbedder())
         self._llm = llm or MockLLM()
-        self._semaphore = asyncio.Semaphore(config.orchestrator.max_concurrent_ingestions)
+        self._semaphore = asyncio.Semaphore(
+            config.orchestrator.max_concurrent_ingestions
+        )
 
     def _validate_source_type(self, source_type: SourceType) -> None:
         if source_type not in ALLOWED_SOURCE_TYPES:
@@ -254,5 +257,3 @@ class InMemoryOrchestrator:
             total=len(records),
             max_allowed=self._config.orchestrator.max_subagents,
         )
-
-

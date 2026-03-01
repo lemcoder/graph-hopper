@@ -1,4 +1,5 @@
 """Retriever: embed a query, search the vector store, format as XML context."""
+
 from __future__ import annotations
 
 from erks.subagent.ingestion import Chunk, EmbeddingInterface

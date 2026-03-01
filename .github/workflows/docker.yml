@@ -1,0 +1,33 @@
+name: Docker Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Docker Build Verification
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: erks:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Build for the current runner architecture; add linux/arm64 for Raspberry Pi
+          platforms: linux/amd64
