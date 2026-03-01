@@ -7,35 +7,54 @@ Convert extracted source content into text chunks and generate vector embeddings
 1. **Embedding Library**: Use `fastembed` to run `BGE-small-en-v1.5` (or the configured model) locally. This is highly optimized for ONNX models and fast CPU inference.
 2. **Chunking Strategy**: Token-window chunking only. Target size 500 tokens, 50 token overlap, minimum 64 tokens. Structural/semantic chunking is deferred for future iterations.
 3. **Tokenizer**: Use the exact tokenizer tied to the target embedding model (`BGE-small-en-v1.5`) to count and split tokens accurately.
-4. **Data Structures**: Keep `Chunk` metadata and dense vector embeddings parallel for memory efficiency (e.g., `IngestionResult(chunks, embeddings)`), rather than embedding the vector directly into the chunk object.
-5. **Batching**: Entire documents are chunked into memory as a list of `Chunk` objects first, then embeddings are generated in batches using `embedding_batch_size` (default 64).
+4. **Data Structures**: Keep `Chunk` metadata and dense vector embeddings parallel for memory efficiency (e.g., `IngestionResult(chunks, embeddings)`), rather than embedding the vector directly into the chunk object. 
+5. **Serialization**: The `Chunk` object is structured as a dataclass with explicit `to_dict()` and `from_dict()` methods to make JSON serialization to disk seamless.
+6. **Batching**: Entire documents are chunked into memory as a list of `Chunk` objects first, then embeddings are generated in batches using `embedding_batch_size` (default 64).
 
 ## Data Structures
 Reflecting the existing code in `erks/subagent/ingestion.py`:
 
 ### `Chunk`
-Represents a fragment of text and its provenance.
+Represents a fragment of text and its provenance. Built as a dataclass to enable easy JSON serialization when persisted by the Vector Store.
 ```python
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass
 class Chunk:
-    def __init__(
-        self,
-        text: str,
-        doc_id: str,
-        chunk_index: int,
-        url_or_path: str = "",
-        token_count: int = 0,
-        metadata: dict | None = None,
-    ):
-        # ...
+    text: str
+    doc_id: str
+    chunk_index: int
+    url_or_path: str = ""
+    token_count: int = 0
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serializes the Chunk to a dictionary for JSON storage."""
+        return {
+            "text": self.text,
+            "doc_id": self.doc_id,
+            "chunk_index": self.chunk_index,
+            "url_or_path": self.url_or_path,
+            "token_count": self.token_count,
+            "metadata": self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Chunk":
+        """Deserializes a dictionary into a Chunk object."""
+        return cls(**data)
 ```
 
 ### `IngestionResult`
 Keeps chunks and embeddings parallel for efficient downstream processing.
 ```python
+from dataclasses import dataclass
+
+@dataclass
 class IngestionResult:
-    def __init__(self, chunks: list[Chunk], embeddings: list[list[float]]):
-        self.chunks = chunks
-        self.embeddings = embeddings
+    chunks: list[Chunk]
+    embeddings: list[list[float]]
 ```
 
 ## Chunking Logic (Token Window)
@@ -54,6 +73,8 @@ The chunking process operates per-document:
 We implement the existing `EmbeddingInterface` defined in `erks/subagent/ingestion.py`:
 
 ```python
+from typing import Protocol
+
 class EmbeddingInterface(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 ```

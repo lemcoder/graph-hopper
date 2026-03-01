@@ -8,9 +8,9 @@ Provide a highly efficient, local, in-process vector storage and retrieval mecha
 1. **Library Selection:** FAISS (`faiss-cpu`) is used for the vector index. It provides fast, local, and in-memory nearest neighbor search that perfectly aligns with the parallel lists data structure (`IngestionResult`) emitted by the chunking and embedding pipeline.
 2. **Persistence Strategy:** Subagent data is split into two files stored within the subagent's dedicated directory on disk:
    - `index.faiss`: The binary serialized FAISS index.
-   - `chunks.json`: A JSON file containing the serialized list of `Chunk` metadata objects.
+   - `chunks.json`: A JSON file containing the serialized list of `Chunk` metadata objects (using the `to_dict()` and `from_dict()` methods).
 3. **Index Lifecycle (Drop & Rebuild):** Because each Subagent encapsulates a single knowledge source (e.g., one git repo or website), we do not implement complex, piecemeal `remove(chunk_id)` or update operations. On re-ingestion, the system simply drops the existing `index.faiss` and `chunks.json` files and rebuilds the index from scratch.
-4. **Dimensions & Distance Metric:** Default to `384` dimensions to match `BGE-small-en-v1.5`. The distance metric defaults to Inner Product (`IndexFlatIP`). To achieve Cosine Similarity (which `fastembed` models typically expect), vectors must be L2-normalized before being added to or searched in the index. These parameters should be configurable via the orchestrator config.
+4. **Dimensions & Similarity Metric:** Default to `384` dimensions to match `BGE-small-en-v1.5`. The metric defaults to Inner Product (`IndexFlatIP`). To achieve Cosine Similarity (which `fastembed` models typically expect), vectors must be L2-normalized before being added to or searched in the index. Because this results in Cosine Similarity, a *higher* score indicates greater relevance (closer to 1.0), unlike traditional distance metrics. These parameters should be configurable via the orchestrator config.
 
 ## Architecture & Data Flow
 
@@ -21,13 +21,13 @@ Provide a highly efficient, local, in-process vector storage and retrieval mecha
 - **Insertion:** Adds vectors to the FAISS index. FAISS implicitly assigns sequential integer IDs (0 to N-1) corresponding to the list order.
 - **Persistence:** 
   - Writes the index to `storage.base_path/<subagent_id>/index.faiss` using `faiss.write_index`.
-  - Serializes the `chunks` list to `storage.base_path/<subagent_id>/chunks.json`.
+  - Serializes the `chunks` list to `storage.base_path/<subagent_id>/chunks.json` by calling `[chunk.to_dict() for chunk in chunks]`.
 
 ### 2. Search Phase
 - **Query Prep:** Takes a generated embedding for the user's query and L2-normalizes it.
-- **Execution:** Performs a FAISS `search(query_vector, k)` to retrieve the top-`k` nearest neighbor distances and their corresponding integer IDs.
-- **Rehydration:** Uses the returned integer IDs to look up the exact `Chunk` objects from the in-memory `chunks` list (loaded from `chunks.json`).
-- **Return:** Yields a list of `(Chunk, distance)` tuples to the answer generator.
+- **Execution:** Performs a FAISS `search(query_vector, k)` to retrieve the top-`k` highest similarity scores and their corresponding integer IDs.
+- **Rehydration:** Uses the returned integer IDs to look up the exact `Chunk` objects from the in-memory `chunks` list (loaded from `chunks.json` via `Chunk.from_dict()`).
+- **Return:** Yields a list of `(Chunk, similarity_score)` tuples to the answer generator, sorted descending (highest similarity first).
 
 ### 3. Re-ingestion / Deletion Phase
 - When a `source_id` is re-ingested or a subagent is deleted, the system deletes the `index.faiss` and `chunks.json` files (or the entire subagent directory) and starts the ingestion pipeline anew.
@@ -53,7 +53,7 @@ class VectorStore:
         pass
 
     def search(self, query_vector: list[float], k: int = 5) -> list[tuple[Chunk, float]]:
-        """Normalizes the query, searches FAISS, and maps IDs back to Chunk objects."""
+        """Normalizes the query, searches FAISS, and maps IDs back to Chunk objects. Returns (Chunk, similarity_score)."""
         pass
 
     def drop(self) -> None:
@@ -63,7 +63,7 @@ class VectorStore:
 
 ## Determinism & Testing
 - To satisfy MVP determinism requirements (as defined in `00-scope.md`), the vector index must be entirely predictable during testing.
-- Tests will use the `DeterministicEmbedder` (which outputs stable SHA-based vectors). The FAISS index must consistently return the same top-`k` results and distance scores for these stable vectors across multiple test runs.
+- Tests will use the `DeterministicEmbedder` (which outputs stable SHA-based vectors). The FAISS index must consistently return the same top-`k` results and similarity scores for these stable vectors across multiple test runs.
 - Tie-breaking logic: If FAISS returns identical similarity scores for multiple chunks, the retrieval layer should sort them deterministically by chunk index or ID to avoid flaky tests.
 
 ## Success Criteria
