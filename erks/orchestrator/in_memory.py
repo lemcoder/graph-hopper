@@ -20,7 +20,11 @@ from erks.models import (
     SubagentStatus,
     ValidationError as ErksValidationError,
 )
+from erks.subagent.confidence import ConfidenceScorer
 from erks.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
+from erks.subagent.retriever import Retriever
+from erks.subagent.subagent import MockLLM, Subagent, SubagentResponse
+from erks.subagent.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +37,17 @@ class InMemoryOrchestrator:
     Suitable for tests and lightweight deployments.
     """
 
-    def __init__(self, config: Config, pipeline: Optional[IngestionPipeline] = None):
+    def __init__(
+        self,
+        config: Config,
+        pipeline: Optional[IngestionPipeline] = None,
+        llm=None,
+    ):
         self._config = config
         self._registry: dict[str, SubagentRecord] = {}
+        self._subagent_instances: dict[str, Subagent] = {}
         self._pipeline = pipeline or IngestionPipeline(DeterministicEmbedder())
+        self._llm = llm or MockLLM()
         self._semaphore = asyncio.Semaphore(config.orchestrator.max_concurrent_ingestions)
 
     def _validate_source_type(self, source_type: SourceType) -> None:
@@ -93,6 +104,20 @@ class InMemoryOrchestrator:
                 async with asyncio.timeout(timeout):
                     result = await self._pipeline.ingest(config)
 
+            # Build the per-subagent vector store and wire up the subagent
+            dims = len(result.embeddings[0]) if result.embeddings else 384
+            vs = VectorStore(dimensions=dims)
+            vs.build(result.embeddings, result.chunks)
+
+            retriever = Retriever(self._pipeline.embedder, vs)
+            subagent = Subagent(
+                subagent_id=subagent_id,
+                retriever=retriever,
+                confidence_scorer=ConfidenceScorer(),
+                llm=self._llm,
+            )
+            self._subagent_instances[subagent_id] = subagent
+
             record.status = SubagentStatus.READY
             record.last_updated = datetime.now(timezone.utc)
             record.last_error = None
@@ -145,32 +170,27 @@ class InMemoryOrchestrator:
         start = time.monotonic()
         timeout_s = self._config.orchestrator.query_timeout_ms / 1000.0
 
-        candidates = []
-        errors = []
+        errors: list[dict] = []
 
-        async def _query_one(agent: SubagentRecord):
-            return {
-                "answer": f"Answer from {agent.subagent_id} for: {query}",
-                "confidence": 0.5,
-                "subagent_id": agent.subagent_id,
-                "sources": [],
-            }
-
-        tasks = [asyncio.create_task(_query_one(a)) for a in ready_agents]
-        done, pending = await asyncio.wait(tasks, timeout=timeout_s)
-        for t in pending:
-            t.cancel()
-            errors.append({"subagent_id": "unknown", "error": "timeout"})
-
-        for task in done:
+        async def _query_one(record: SubagentRecord) -> Optional[SubagentResponse]:
+            sa = self._subagent_instances.get(record.subagent_id)
+            if sa is None:
+                return None
             try:
-                candidates.append(task.result())
+                return await asyncio.wait_for(sa.aquery(query), timeout=timeout_s)
             except Exception as exc:
-                errors.append({"subagent_id": "unknown", "error": str(exc)})
+                logger.warning(
+                    "Subagent %s failed or timed out: %s", record.subagent_id, exc
+                )
+                errors.append({"subagent_id": record.subagent_id, "error": str(exc)})
+                return None
+
+        responses = await asyncio.gather(*[_query_one(a) for a in ready_agents])
+        valid: list[SubagentResponse] = [r for r in responses if r is not None]
 
         latency_ms = int((time.monotonic() - start) * 1000)
 
-        if not candidates:
+        if not valid:
             return QueryResult(
                 answer="No subagents responded within the query timeout.",
                 confidence=0.0,
@@ -183,36 +203,43 @@ class InMemoryOrchestrator:
                 },
             )
 
-        def sort_key(c):
-            rec = self._registry.get(c["subagent_id"])
+        def _sort_key(r: SubagentResponse):
+            rec = self._registry.get(r.subagent_id)
             created = (
                 rec.created_at if rec else datetime.min.replace(tzinfo=timezone.utc)
             )
-            return (-c["confidence"], created, c["subagent_id"])
+            return (-r.confidence_score, created, r.subagent_id)
 
-        candidates.sort(key=sort_key)
-        best = candidates[0]
+        valid.sort(key=_sort_key)
+        best = valid[0]
 
         alternatives = [
             {
-                "answer": c["answer"],
-                "confidence": c["confidence"],
-                "subagent_id": c["subagent_id"],
+                "answer": r.answer,
+                "confidence": r.confidence_score,
+                "subagent_id": r.subagent_id,
             }
-            for c in candidates[1:]
-            if c["confidence"] == best["confidence"]
+            for r in valid[1:]
+            if r.confidence_score == best.confidence_score
         ]
 
         return QueryResult(
-            answer=best["answer"],
-            confidence=best["confidence"],
-            subagent_id=best["subagent_id"],
+            answer=best.answer,
+            confidence=best.confidence_score,
+            subagent_id=best.subagent_id,
             alternatives=alternatives if alternatives else None,
-            sources=best.get("sources", []),
+            sources=[
+                {
+                    "doc_id": s.doc_id,
+                    "url_or_path": s.url_or_path,
+                    "chunk_index": s.chunk_index,
+                }
+                for s in best.sources
+            ],
             meta={
                 "latency_ms": latency_ms,
                 "queried_subagents_count": len(ready_agents),
-                "success_count": len(candidates),
+                "success_count": len(valid),
                 "errors": errors,
             },
         )
@@ -227,3 +254,5 @@ class InMemoryOrchestrator:
             total=len(records),
             max_allowed=self._config.orchestrator.max_subagents,
         )
+
+
