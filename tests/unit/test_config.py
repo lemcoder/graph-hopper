@@ -1,4 +1,4 @@
-"""Tests for erks/config.py – all dataclasses, validation, from_yaml, and default()."""
+"""Tests for src/config.py – all dataclasses, validation, from_yaml, and default()."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import textwrap
 
 import pytest
 
-from erks.config import (
+from src.config import (
     Config,
     LLMConfig,
     LogConfig,
