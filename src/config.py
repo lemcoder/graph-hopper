@@ -55,20 +55,6 @@ class SecretsConfig:
 
 
 @dataclasses.dataclass
-class ServerConfig:
-    """HTTP server and transport security settings."""
-
-    allowed_hosts: list = dataclasses.field(default_factory=list)
-    """
-    Hosts accepted in the HTTP ``Host`` header.  When non-empty, the MCP
-    transport security middleware rejects requests whose ``Host`` header is not
-    in this list.  Supports ``*`` as a port wildcard, e.g. ``192.168.1.49:*``.
-
-    Leave empty to disable host validation entirely (useful for local dev).
-    """
-
-
-@dataclasses.dataclass
 class LLMConfig:
     provider: str = "openrouter"
     api_key: str = ""
@@ -90,7 +76,6 @@ class Config:
     storage: StorageConfig = dataclasses.field(default_factory=StorageConfig)
     secrets: SecretsConfig = dataclasses.field(default_factory=SecretsConfig)
     llm: LLMConfig = dataclasses.field(default_factory=LLMConfig)
-    server: ServerConfig = dataclasses.field(default_factory=ServerConfig)
 
     @classmethod
     def from_yaml(cls, path: str) -> "Config":
@@ -102,14 +87,12 @@ class Config:
         storage = StorageConfig(**data.get("storage", {}))
         secrets = SecretsConfig(**data.get("secrets", {}))
         llm = LLMConfig(**data.get("llm", {}))
-        server = ServerConfig(**data.get("server", {}))
         return cls(
             orchestrator=orchestrator,
             log=log,
             storage=storage,
             secrets=secrets,
             llm=llm,
-            server=server,
         )
 
     @classmethod
