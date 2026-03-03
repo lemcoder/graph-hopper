@@ -11,15 +11,14 @@ Run with uvicorn::
 Or use the ``graph-hopper-server`` shortcut defined in ``pyproject.toml``::
 
     uv run graph-hopper-server
+
+The MCP endpoint is served at ``/mcp`` (Streamable HTTP transport).
+Connect your client to ``http://<host>:8000/mcp``.
 """
 
 from __future__ import annotations
 
-import contextlib
 import os
-
-from starlette.applications import Starlette
-from starlette.routing import Mount
 
 from src.config import Config
 from src.server.wiring import create_production_server, setup_logging
@@ -32,25 +31,12 @@ else:
 
 setup_logging(_config)
 
-# ``_mcp`` is the FastMCP instance; ``app`` is the ASGI application consumed by
-# uvicorn.  A bare FastMCP object is not an ASGI app – callers must obtain the
-# HTTP application via ``.streamable_http_app()`` and run the session manager
-# through the Starlette lifespan.
+# ``_mcp`` is the FastMCP instance.
+# ``streamable_http_app()`` returns a fully self-contained Starlette ASGI
+# application that already wires the session manager lifespan internally —
+# no extra wrapping needed.  The MCP endpoint is available at ``POST /mcp``.
 _mcp = create_production_server(_config)
-
-
-@contextlib.asynccontextmanager
-async def _lifespan(starlette_app: Starlette):
-    async with _mcp.session_manager.run():
-        yield
-
-
-app = Starlette(
-    routes=[
-        Mount("/", app=_mcp.streamable_http_app()),
-    ],
-    lifespan=_lifespan,
-)
+app = _mcp.streamable_http_app()
 
 
 def main() -> None:
