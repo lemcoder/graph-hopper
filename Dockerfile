@@ -21,7 +21,7 @@ WORKDIR /home/erks/app
 
 # Copy the venv and source from the builder stage
 COPY --from=builder /app/.venv /home/erks/app/.venv
-COPY --chown=erks:erks erks/ ./erks/
+COPY --chown=erks:erks src/ ./src/
 COPY --chown=erks:erks main.py ./
 
 # Make the virtualenv's binaries the default
