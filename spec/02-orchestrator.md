@@ -1,7 +1,7 @@
 # Subagent Orchestrator Spec
 
 ## Purpose
-Manage subagent lifecycle and query routing for the ERKS runtime. The orchestrator is responsible for creating subagents from single sources, routing queries to active subagents, aggregating answers with confidences, and returning the best answer to the client via the MCP interface.
+Manage subagent lifecycle and query routing for the graph-hopper runtime. The orchestrator is responsible for creating subagents from single sources, routing queries to active subagents, aggregating answers with confidences, and returning the best answer to the client via the MCP interface.
 
 This version of the orchestrator spec codifies MVP decisions:
 - Only `git` and `http(s)` source types are supported.

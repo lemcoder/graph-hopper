@@ -1,16 +1,26 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
-from erks.models import (
+from unittest.mock import AsyncMock, MagicMock
+
+from src.models import (
+    AddSourceResult,
+    CapExceededError,
+    ListSourcesResult,
+    QueryResult,
+    SourceConfig,
     SourceType,
-    SubagentStatus,
     SubagentRecord,
     AddSourceResult,
     QueryResult,
     ListSourcesResult,
     CapExceededError,
+    SubagentStatus,
 )
-from erks.server.mcp_server import create_mcp_server
+from src.models import (
+    ValidationError as GraphHopperValidationError,
+)
+from src.server.mcp_server import create_mcp_server
 
 
 def make_mock_orchestrator():

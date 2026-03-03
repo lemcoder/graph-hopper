@@ -6,8 +6,8 @@ import os
 
 import pytest
 
-from erks.subagent.ingestion import Chunk, DeterministicEmbedder
-from erks.subagent.vector_store import VectorStore
+from src.subagent.ingestion import Chunk, DeterministicEmbedder
+from src.subagent.vector_store import VectorStore
 
 
 # ---------------------------------------------------------------------------

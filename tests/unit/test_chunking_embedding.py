@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from erks.subagent.ingestion import (
+from src.subagent.ingestion import (
     Chunk,
     DeterministicEmbedder,
     IngestionPipeline,
@@ -215,7 +215,7 @@ def test_chunker_custom_encode_decode():
 
 @pytest.mark.asyncio
 async def test_pipeline_returns_ingestion_result():
-    from erks.models import SourceConfig, SourceType
+    from src.models import SourceConfig, SourceType
 
     pipeline = IngestionPipeline(DeterministicEmbedder(seed="t", dim=16))
     cfg = SourceConfig(
@@ -229,7 +229,7 @@ async def test_pipeline_returns_ingestion_result():
 
 @pytest.mark.asyncio
 async def test_pipeline_chunks_and_embeddings_are_parallel():
-    from erks.models import SourceConfig, SourceType
+    from src.models import SourceConfig, SourceType
 
     pipeline = IngestionPipeline(DeterministicEmbedder(dim=8))
     cfg = SourceConfig(type=SourceType.HTTP, location="https://example.com/")

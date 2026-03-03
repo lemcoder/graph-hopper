@@ -6,10 +6,10 @@ import logging
 import logging.handlers
 import os
 
-from erks.config import Config
-from erks.orchestrator.in_memory import InMemoryOrchestrator
-from erks.server.mcp_server import create_mcp_server
-from erks.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
+from src.config import Config
+from src.orchestrator.in_memory import InMemoryOrchestrator
+from src.server.mcp_server import create_mcp_server
+from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
 
 
 def setup_logging(config: Config) -> None:

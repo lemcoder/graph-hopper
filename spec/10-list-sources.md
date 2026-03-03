@@ -2,7 +2,7 @@
 
 Purpose
 -------
-This document specifies the `list_sources` MCP tool for the Expert Runtime Knowledge System (ERKS) updated to match orchestrator and ingestion decisions for the MVP.
+This document specifies the `list_sources` MCP tool for the graph-hopper updated to match orchestrator and ingestion decisions for the MVP.
 
 Summary of key MVP decisions reflected here
 - The orchestrator supports only `git` and `http(s)` sources in MVP.

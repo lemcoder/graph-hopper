@@ -9,7 +9,7 @@ from typing import Optional
 import faiss  # type: ignore
 import numpy as np
 
-from erks.subagent.ingestion import Chunk
+from src.subagent.ingestion import Chunk
 
 
 class VectorStore:

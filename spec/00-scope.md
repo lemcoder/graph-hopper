@@ -1,8 +1,8 @@
-# Expert Runtime Knowledge System (ERKS) — High-Level Scope (updated)
+# graph-hopper — High-Level Scope (updated)
 
 ## 1. Overview
 
-The Expert Runtime Knowledge System (ERKS) is an embeddable, MCP-native runtime for creating isolated per-source knowledge units ("subagents"). Each subagent ingests a single source, builds a vector index (and optionally a knowledge graph), and answers queries grounded in its source content. The orchestrator exposes a minimal MCP toolset so coding agents can dynamically add sources, query knowledge, and enumerate known subagents.
+The graph-hopper is an embeddable, MCP-native runtime for creating isolated per-source knowledge units ("subagents"). Each subagent ingests a single source, builds a vector index (and optionally a knowledge graph), and answers queries grounded in its source content. The orchestrator exposes a minimal MCP toolset so coding agents can dynamically add sources, query knowledge, and enumerate known subagents.
 
 MVP focus:
 - deterministic, testable behavior

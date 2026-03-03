@@ -1,4 +1,8 @@
+<<<<<<< HEAD:erks/models.py
 """Shared Pydantic models and exceptions for ERKS."""
+=======
+"""Shared Pydantic models and exceptions for graph-hopper."""
+>>>>>>> aedfc8d (Rename ERKS to graph hopper):src/models.py
 
 from __future__ import annotations
 

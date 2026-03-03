@@ -2,7 +2,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from erks.models import SourceConfig, AddSourceResult, QueryResult, ListSourcesResult
+from src.models import SourceConfig, AddSourceResult, QueryResult, ListSourcesResult
 
 
 @runtime_checkable

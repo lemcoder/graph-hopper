@@ -12,7 +12,7 @@ Convert extracted source content into text chunks and generate vector embeddings
 6. **Batching**: Entire documents are chunked into memory as a list of `Chunk` objects first, then embeddings are generated in batches using `embedding_batch_size` (default 64).
 
 ## Data Structures
-Reflecting the existing code in `erks/subagent/ingestion.py`:
+Reflecting the existing code in `src/subagent/ingestion.py`:
 
 ### `Chunk`
 Represents a fragment of text and its provenance. Built as a dataclass to enable easy JSON serialization when persisted by the Vector Store.
@@ -70,7 +70,7 @@ The chunking process operates per-document:
 6. Accumulate all `Chunk` objects into a single list for the document/source.
 
 ## Embedding Implementation
-We implement the existing `EmbeddingInterface` defined in `erks/subagent/ingestion.py`:
+We implement the existing `EmbeddingInterface` defined in `src/subagent/ingestion.py`:
 
 ```python
 from typing import Protocol
@@ -86,7 +86,7 @@ class EmbeddingInterface(Protocol):
 - Returns a list of floats (dense vectors) mapping 1:1 to the `texts` input.
 
 ### `DeterministicEmbedder` (Testing)
-- The existing `DeterministicEmbedder` class using SHA-256 in `erks/subagent/ingestion.py` must remain the default for all automated tests.
+- The existing `DeterministicEmbedder` class using SHA-256 in `src/subagent/ingestion.py` must remain the default for all automated tests.
 - This ensures reproducible vectors, stable test environments, and deterministic tie-breaking without downloading large model weights during unit tests.
 
 ## Success Criteria

@@ -37,7 +37,7 @@ Notes:
 ## DI and lifecycle
 - Use FastMCP `lifespan` to initialize shared services (orchestrator, DB, caches).
 - Do NOT instantiate core orchestration/persistence inside tool functions; accept via constructor, lifespan context, or dependency injection.
-- Export a wiring module (e.g., `erks.server.wiring`) that composes production instances and reads configuration (including `orchestrator.max_subagents`).
+- Export a wiring module (e.g., `src.server.wiring`) that composes production instances and reads configuration (including `orchestrator.max_subagents`).
 - Allow tests to inject fakes/mocks (OrchestratorInterface, EmbeddingInterface, InMemoryIndex).
 
 ---
@@ -108,10 +108,10 @@ Notes:
 ---
 
 ## Files & layout (recommended)
-- `erks/server/mcp_server.py`      — FastMCP tool adapters + wiring helpers (implement cap checks in adapters or delegate to orchestrator API)
-- `erks/server/wiring.py`         — production wiring factory (lifespan). Read `orchestrator.max_subagents` from config and construct orchestrator instance.
-- `erks/orchestrator/interface.py` — protocol for orchestrator (export registry query, add_source semantics, query routing).
-- `erks/orchestrator/in_memory.py` — lightweight orchestrator for tests (deterministic embeddings & seeded RNG).
+- `src/server/mcp_server.py`      — FastMCP tool adapters + wiring helpers (implement cap checks in adapters or delegate to orchestrator API)
+- `src/server/wiring.py`         — production wiring factory (lifespan). Read `orchestrator.max_subagents` from config and construct orchestrator instance.
+- `src/orchestrator/interface.py` — protocol for orchestrator (export registry query, add_source semantics, query routing).
+- `src/orchestrator/in_memory.py` — lightweight orchestrator for tests (deterministic embeddings & seeded RNG).
 - `tests/unit/test_mcp_tools.py`
 - `tests/integration/test_streamable_http_e2e.py`
 
@@ -147,5 +147,5 @@ Notes:
 ---
 
 If you want, I can:
-- produce a FastMCP `erks/server/mcp_server.py` skeleton implementing these rules, including the MCP-level error shape for cap enforcement, or
+- produce a FastMCP `src/server/mcp_server.py` skeleton implementing these rules, including the MCP-level error shape for cap enforcement, or
 - produce deterministic unit test stubs that assert the cap semantics and `git`/`http` validation.

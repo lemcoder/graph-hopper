@@ -1,8 +1,9 @@
-"""Configuration dataclasses for ERKS."""
+"""Configuration dataclasses for graph-hopper."""
 
 from __future__ import annotations
 
 import dataclasses
+from typing import Optional
 import yaml
 
 
