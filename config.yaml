@@ -32,8 +32,8 @@ orchestrator:
 log:
   # Override these paths when running as a regular (non-root) user, e.g. on a
   # Raspberry Pi where /var/log/ may not be writable.
-  path: "/var/log/graph-hopper/orchestrator.log"
-  # path: "logs/orchestrator.log"   # ← user-writable alternative
+  # path: "/var/log/graph-hopper/orchestrator.log"
+  path: "logs/orchestrator.log" # ← user-writable alternative
 
   # Maximum size of a single log file before rotation (bytes).  100 MB default.
   max_bytes: 104857600
@@ -44,17 +44,17 @@ log:
 storage:
   # Where per-subagent data (FAISS index + chunks.json) is persisted.
   # Override to a user-writable path when not running as root.
-  base_path: "/var/lib/graph-hopper/subagents"
-  # base_path: "data/subagents"   # ← user-writable alternative
+  # base_path: "/var/lib/graph-hopper/subagents"
+  base_path: "data/subagents" # ← user-writable alternative
 
-  failed_path: "/var/lib/graph-hopper/subagents/failed"
-  # failed_path: "data/subagents/failed"
+  # failed_path: "/var/lib/graph-hopper/subagents/failed"
+  failed_path: "data/subagents/failed"
 
 secrets:
   # How the application retrieves secrets (currently only "file" is supported).
   store_type: "file"
-  path: "/etc/graph-hopper/secrets.yaml"
-  # path: "config/secrets.yaml"   # ← user-writable alternative
+  # path: "/etc/graph-hopper/secrets.yaml"
+  path: "config/secrets.yaml" # ← user-writable alternative
 
 llm:
   # LLM provider.  Currently "openrouter" is the supported provider.
