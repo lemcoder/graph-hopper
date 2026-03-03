@@ -6,6 +6,8 @@ import logging
 import logging.handlers
 import os
 
+from mcp.server.transport_security import TransportSecuritySettings
+
 from src.config import Config
 from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.server.mcp_server import create_mcp_server
@@ -39,4 +41,15 @@ def create_production_server(config: Config | None = None):
     )
     pipeline = IngestionPipeline(embedder)
     orchestrator = InMemoryOrchestrator(config, pipeline)
-    return create_mcp_server(orchestrator)
+
+    allowed_hosts = config.server.allowed_hosts
+    transport_security = (
+        TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=allowed_hosts,
+        )
+        if allowed_hosts
+        else TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    )
+
+    return create_mcp_server(orchestrator, transport_security=transport_security)
