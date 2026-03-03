@@ -1,7 +1,7 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from src.models import (
     AddSourceResult,
@@ -11,10 +11,6 @@ from src.models import (
     SourceConfig,
     SourceType,
     SubagentRecord,
-    AddSourceResult,
-    QueryResult,
-    ListSourcesResult,
-    CapExceededError,
     SubagentStatus,
 )
 from src.models import (

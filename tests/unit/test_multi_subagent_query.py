@@ -13,9 +13,8 @@ from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.subagent.confidence import ConfidenceScorer
 from src.subagent.ingestion import Chunk, DeterministicEmbedder
 from src.subagent.retriever import Retriever
-from src.subagent.subagent import MockLLM, Subagent, SubagentResponse, SourceMetadata
+from src.subagent.subagent import MockLLM, SourceMetadata, Subagent, SubagentResponse
 from src.subagent.vector_store import VectorStore
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -151,12 +150,8 @@ def config():
 
 @pytest.fixture
 def orchestrator(config):
-<<<<<<< HEAD
-    from erks.subagent.ingestion import IngestionPipeline
-
-=======
     from src.subagent.ingestion import IngestionPipeline
->>>>>>> aedfc8d (Rename ERKS to graph hopper)
+
     pipeline = IngestionPipeline(DeterministicEmbedder(seed="test"))
     return InMemoryOrchestrator(config, pipeline, llm=MockLLM("mock answer"))
 
