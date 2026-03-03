@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import os
 
-from erks.config import Config
-from erks.server.wiring import create_production_server, setup_logging
+from src.config import Config
+from src.server.wiring import create_production_server, setup_logging
 
 _config_path = os.environ.get("ERKS_CONFIG_PATH")
 if _config_path:
