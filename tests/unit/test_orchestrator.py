@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-import pytest
-from erks.config import Config
-from erks.models import (
-    SourceConfig,
-    SourceType,
-    SubagentStatus,
-    CapExceededError,
-=======
 import asyncio
 
 import pytest
@@ -17,7 +8,6 @@ from src.models import (
     SourceConfig,
     SourceType,
     SubagentStatus,
->>>>>>> aedfc8d (Rename ERKS to graph hopper)
 )
 from src.models import (
     ValidationError as GraphHopperValidationError,
