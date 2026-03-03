@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from src.config import Config
@@ -8,9 +6,6 @@ from src.models import (
     SourceConfig,
     SourceType,
     SubagentStatus,
-)
-from src.models import (
-    ValidationError as GraphHopperValidationError,
 )
 from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline

@@ -1,12 +1,12 @@
-"""Tests for erks/server/wiring.py – setup_logging and create_production_server."""
+"""Tests for src/server/wiring.py – setup_logging and create_production_server."""
 
 from __future__ import annotations
 
 import os
 
 
-from erks.config import Config, LogConfig
-from erks.server.wiring import create_production_server, setup_logging
+from src.config import Config, LogConfig
+from src.server.wiring import create_production_server, setup_logging
 
 
 # ---------------------------------------------------------------------------
