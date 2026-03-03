@@ -9,7 +9,7 @@ import os
 from src.config import Config
 from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.server.mcp_server import create_mcp_server
-from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
+from src.subagent.ingestion import FastEmbedder, IngestionPipeline
 
 
 def setup_logging(config: Config) -> None:
@@ -33,7 +33,10 @@ def create_production_server(config: Config | None = None):
     if config is None:
         config = Config.default()
 
-    embedder = DeterministicEmbedder()  # Replace with real embedder in production
+    embedder = FastEmbedder(
+        model_name=config.orchestrator.default_embedding_model,
+        batch_size=config.orchestrator.embedding_batch_size,
+    )
     pipeline = IngestionPipeline(embedder)
     orchestrator = InMemoryOrchestrator(config, pipeline)
     return create_mcp_server(orchestrator)
