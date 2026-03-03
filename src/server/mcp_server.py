@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from src.models import (
     AddSourceResult,
@@ -24,10 +25,12 @@ logger = logging.getLogger(__name__)
 
 
 def create_mcp_server(
-    orchestrator: OrchestratorInterface, name: str = "Graph Hopper"
+    orchestrator: OrchestratorInterface,
+    name: str = "Graph Hopper",
+    transport_security: Optional[TransportSecuritySettings] = None,
 ) -> FastMCP:
     """Factory that creates a FastMCP server wired to the given orchestrator."""
-    mcp = FastMCP(name)
+    mcp = FastMCP(name, transport_security=transport_security)
 
     @mcp.tool()
     async def add_source(

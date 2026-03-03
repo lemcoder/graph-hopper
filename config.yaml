@@ -1,5 +1,20 @@
 # Graph Hopper Configuration File
 #
+# TRANSPORT SECURITY
+# When the server is accessed by IP address (e.g. from another machine on the
+# LAN), you must declare the IP (and port) in server.allowed_hosts, otherwise
+# the MCP transport security middleware rejects the request with 421.
+#
+# Example for a Raspberry Pi at 192.168.1.49 on port 8000:
+#
+#   server:
+#     allowed_hosts:
+#       - "192.168.1.49:8000"
+#
+# The wildcard form "192.168.1.49:*" accepts any port.
+# Leave allowed_hosts empty (the default) to disable host validation entirely,
+# which is fine for local development where only localhost is used.
+#
 # Copy this file, edit the values, and point the server at it:
 #
 #   export GRAPH_HOPPER_CONFIG_PATH=/path/to/your/config.yaml
@@ -55,6 +70,14 @@ secrets:
   store_type: "file"
   # path: "/etc/graph-hopper/secrets.yaml"
   path: "config/secrets.yaml" # ← user-writable alternative
+
+server:
+  # Hosts accepted in the HTTP ``Host`` header when the server is bound to
+  # 0.0.0.0.  Add your machine's LAN IP (or hostname) here.
+  # allowed_hosts:
+  #   - "192.168.1.49:8000"   # ← replace with your Pi's IP and port
+  #   - "raspberrypi:8000"    # ← or use the hostname
+  allowed_hosts: []
 
 llm:
   # LLM provider.  Currently "openrouter" is the supported provider.
