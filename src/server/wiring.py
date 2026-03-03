@@ -12,6 +12,7 @@ from src.config import Config
 from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.server.mcp_server import create_mcp_server
 from src.subagent.ingestion import FastEmbedder, IngestionPipeline
+from src.subagent.subagent import LiteLLM
 
 
 def setup_logging(config: Config) -> None:
@@ -40,7 +41,11 @@ def create_production_server(config: Config | None = None):
         batch_size=config.orchestrator.embedding_batch_size,
     )
     pipeline = IngestionPipeline(embedder)
-    orchestrator = InMemoryOrchestrator(config, pipeline)
+    llm = LiteLLM(
+        model=config.llm.subagent_model,
+        api_key=config.llm.api_key,
+    )
+    orchestrator = InMemoryOrchestrator(config, pipeline, llm=llm)
 
     transport_security = TransportSecuritySettings(
         enable_dns_rebinding_protection=False
