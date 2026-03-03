@@ -14,7 +14,9 @@ from src.models import (
     QueryResult,
     SourceConfig,
     SourceType,
-    ValidationError as ErksValidationError,
+)
+from src.models import (
+    ValidationError as GraphHopperValidationError,
 )
 from src.orchestrator.interface import OrchestratorInterface
 
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_mcp_server(
-    orchestrator: OrchestratorInterface, name: str = "ERKS"
+    orchestrator: OrchestratorInterface, name: str = "GraphHopper"
 ) -> FastMCP:
     """Factory that creates a FastMCP server wired to the given orchestrator."""
     mcp = FastMCP(name)
@@ -50,7 +52,7 @@ def create_mcp_server(
             try:
                 source_type = SourceType(type_lower)
             except ValueError:
-                raise ErksValidationError(
+                raise GraphHopperValidationError(
                     f"Unsupported source type '{type}'. Allowed: git, http"
                 )
 
@@ -71,7 +73,7 @@ def create_mcp_server(
                 f"MAX_SUBAGENTS_EXCEEDED: {exc.message} "
                 f"(current_count={exc.current_count}, max_subagents={exc.max_subagents})"
             )
-        except ErksValidationError as exc:
+        except GraphHopperValidationError as exc:
             raise ValueError(str(exc))
 
     @mcp.tool()

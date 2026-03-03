@@ -1,16 +1,16 @@
-"""Entrypoint for the ERKS MCP server.
+"""Entrypoint for the Graph Hopper MCP server.
 
 The server is configured via a YAML file whose path is read from the
-``ERKS_CONFIG_PATH`` environment variable.  When the variable is not set the
+``GRAPH_HOPPER_CONFIG_PATH`` environment variable.  When the variable is not set the
 application falls back to built-in defaults (``Config.default()``).
 
 Run with uvicorn::
 
     uvicorn main:app --host 0.0.0.0 --port 8000
 
-Or use the ``erks-server`` shortcut defined in ``pyproject.toml``::
+Or use the ``graph-hopper-server`` shortcut defined in ``pyproject.toml``::
 
-    uv run erks-server
+    uv run graph-hopper-server
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import os
 from src.config import Config
 from src.server.wiring import create_production_server, setup_logging
 
-_config_path = os.environ.get("ERKS_CONFIG_PATH")
+_config_path = os.environ.get("GRAPH_HOPPER_CONFIG_PATH")
 if _config_path:
     _config = Config.from_yaml(_config_path)
 else:
@@ -36,8 +36,8 @@ def main() -> None:
     """CLI entrypoint – starts uvicorn programmatically."""
     import uvicorn  # type: ignore
 
-    host = os.environ.get("ERKS_HOST", "0.0.0.0")
-    port = int(os.environ.get("ERKS_PORT", "8000"))
+    host = os.environ.get("GRAPH_HOPPER_HOST", "0.0.0.0")
+    port = int(os.environ.get("GRAPH_HOPPER_PORT", "8000"))
     uvicorn.run("main:app", host=host, port=port, reload=False)
 
 
