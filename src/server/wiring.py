@@ -42,14 +42,8 @@ def create_production_server(config: Config | None = None):
     pipeline = IngestionPipeline(embedder)
     orchestrator = InMemoryOrchestrator(config, pipeline)
 
-    allowed_hosts = config.server.allowed_hosts
-    transport_security = (
-        TransportSecuritySettings(
-            enable_dns_rebinding_protection=True,
-            allowed_hosts=allowed_hosts,
-        )
-        if allowed_hosts
-        else TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    transport_security = TransportSecuritySettings(
+        enable_dns_rebinding_protection=False
     )
 
     return create_mcp_server(orchestrator, transport_security=transport_security)
