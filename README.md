@@ -1,6 +1,6 @@
-# ERKS – Extensible Retrieval Knowledge System
+# graph-hopper
 
-ERKS is a **Model Context Protocol (MCP) server** that turns arbitrary document
+**graph-hopper** is a **Model Context Protocol (MCP) server** that turns arbitrary document
 sources (Git repositories, HTTP pages, etc.) into queryable knowledge bases.
 It manages a pool of *subagents* – each responsible for one source – and
 dispatches queries to all of them in parallel, returning the most confident
@@ -87,11 +87,11 @@ The server will start and be accessible at `http://localhost:8000`.
 
 ## Configuration
 
-ERKS reads its configuration from a YAML file.  Point the server at your file
-by setting the `ERKS_CONFIG_PATH` environment variable:
+graph-hopper reads its configuration from a YAML file. Point the server at your file
+by setting the `GRAPH_HOPPER_CONFIG_PATH` environment variable:
 
 ```bash
-export ERKS_CONFIG_PATH=/path/to/config.yaml
+export GRAPH_HOPPER_CONFIG_PATH=/path/to/config.yaml
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -159,7 +159,7 @@ nano my-config.yaml
 #### Run
 
 ```bash
-export ERKS_CONFIG_PATH=my-config.yaml
+export GRAPH_HOPPER_CONFIG_PATH=my-config.yaml
 export OPENROUTER_API_KEY=your-key-here
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
@@ -171,15 +171,15 @@ the same LAN (e.g. your laptop can connect to the Pi at
 #### Run as a systemd service (optional)
 
 ```ini
-# /etc/systemd/system/erks.service
+# /etc/systemd/system/graph-hopper.service
 [Unit]
-Description=ERKS MCP Server
+Description=graph-hopper MCP Server
 After=network.target
 
 [Service]
 User=pi
 WorkingDirectory=/home/pi/graph-hopper
-Environment="ERKS_CONFIG_PATH=/home/pi/graph-hopper/my-config.yaml"
+Environment="GRAPH_HOPPER_CONFIG_PATH=/home/pi/graph-hopper/my-config.yaml"
 Environment="OPENROUTER_API_KEY=your-key-here"
 ExecStart=/home/pi/graph-hopper/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=on-failure
@@ -190,8 +190,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable erks
-sudo systemctl start erks
+sudo systemctl enable graph-hopper
+sudo systemctl start graph-hopper
 ```
 
 ---
@@ -199,31 +199,31 @@ sudo systemctl start erks
 ### 2. Docker
 
 Docker provides an isolated, reproducible environment and is the easiest way
-to run ERKS on any machine without installing Python or uv.
+to run graph-hopper on any machine without installing Python or uv.
 
 #### Build
 
 ```bash
-docker build -t erks:latest .
+docker build -t graph-hopper:latest .
 ```
 
 > **Raspberry Pi (ARM64):** Build for the Pi's architecture with:
 > ```bash
-> docker buildx build --platform linux/arm64 -t erks:latest .
+> docker buildx build --platform linux/arm64 -t graph-hopper:latest .
 > ```
 
 #### Run
 
 ```bash
 docker run -d \
-  --name erks \
+  --name graph-hopper \
   -p 8000:8000 \
-  -v "$(pwd)/my-config.yaml:/home/erks/app/config.yaml:ro" \
-  -v "$(pwd)/data:/home/erks/data" \
-  -v "$(pwd)/logs:/home/erks/logs" \
-  -e ERKS_CONFIG_PATH=/home/erks/app/config.yaml \
+  -v "$(pwd)/my-config.yaml:/home/graph-hopper/app/config.yaml:ro" \
+  -v "$(pwd)/data:/home/graph-hopper/data" \
+  -v "$(pwd)/logs:/home/graph-hopper/logs" \
+  -e GRAPH_HOPPER_CONFIG_PATH=/home/graph-hopper/app/config.yaml \
   -e OPENROUTER_API_KEY=your-key-here \
-  erks:latest
+  graph-hopper:latest
 ```
 
 | Flag | Purpose |
@@ -232,7 +232,7 @@ docker run -d \
 | `-v ./my-config.yaml:…` | Mount your config file (read-only) |
 | `-v ./data:…` | Persist subagent indexes across container restarts |
 | `-v ./logs:…` | Persist log files on the host |
-| `-e ERKS_CONFIG_PATH=…` | Tell the server where to find the config |
+| `-e GRAPH_HOPPER_CONFIG_PATH=…` | Tell the server where to find the config |
 | `-e OPENROUTER_API_KEY=…` | Pass the API key securely |
 
 #### Verify
@@ -244,7 +244,7 @@ curl http://localhost:8000/
 #### Stop / Remove
 
 ```bash
-docker stop erks && docker rm erks
+docker stop graph-hopper && docker rm graph-hopper
 ```
 
 ---
@@ -350,7 +350,7 @@ uv run ruff format .
 
 ```
 graph-hopper/
-├── erks/                    # Application package
+├── src/                     # Application package
 │   ├── config.py            # Configuration dataclasses + YAML loader
 │   ├── models.py            # Shared Pydantic models and exceptions
 │   ├── orchestrator/        # InMemoryOrchestrator (core dispatch logic)
@@ -363,7 +363,7 @@ graph-hopper/
 ├── spec/                    # Detailed functional specifications
 ├── config.yaml              # Annotated example configuration file
 ├── Dockerfile               # Multi-stage Docker image
-├── main.py                  # Uvicorn entrypoint (reads ERKS_CONFIG_PATH)
+├── main.py                  # Uvicorn entrypoint (reads GRAPH_HOPPER_CONFIG_PATH)
 └── pyproject.toml           # Python project metadata and dependencies
 ```
 
