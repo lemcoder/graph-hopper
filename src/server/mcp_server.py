@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_mcp_server(
-    orchestrator: OrchestratorInterface, name: str = "GraphHopper"
+    orchestrator: OrchestratorInterface, name: str = "Graph Hopper"
 ) -> FastMCP:
     """Factory that creates a FastMCP server wired to the given orchestrator."""
     mcp = FastMCP(name)
