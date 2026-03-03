@@ -5,7 +5,6 @@ Integration tests for the graph-hopper MCP server using in-memory orchestrator.
 import pytest
 
 from src.config import Config
-from src.models import CapExceededError, SourceType, SubagentStatus
 from src.orchestrator.in_memory import InMemoryOrchestrator
 from src.server.mcp_server import create_mcp_server
 from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline

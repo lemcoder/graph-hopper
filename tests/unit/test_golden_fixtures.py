@@ -12,19 +12,19 @@ import os
 
 import pytest
 
-from erks.config import Config
-from erks.models import SourceConfig, SourceType, SubagentStatus
-from erks.orchestrator.in_memory import InMemoryOrchestrator
-from erks.subagent.confidence import ConfidenceScorer
-from erks.subagent.ingestion import (
+from src.config import Config
+from src.models import SourceConfig, SourceType, SubagentStatus
+from src.orchestrator.in_memory import InMemoryOrchestrator
+from src.subagent.confidence import ConfidenceScorer
+from src.subagent.ingestion import (
     Chunk,
     DeterministicEmbedder,
     IngestionPipeline,
     TokenWindowChunker,
 )
-from erks.subagent.retriever import Retriever
-from erks.subagent.subagent import MockLLM, Subagent
-from erks.subagent.vector_store import VectorStore
+from src.subagent.retriever import Retriever
+from src.subagent.subagent import MockLLM, Subagent
+from src.subagent.vector_store import VectorStore
 
 # ---------------------------------------------------------------------------
 # Fixture helpers
