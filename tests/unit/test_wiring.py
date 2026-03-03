@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import os
 
-
 from src.config import Config, LogConfig
 from src.server.wiring import create_production_server, setup_logging
-
 
 # ---------------------------------------------------------------------------
 # setup_logging
@@ -15,7 +13,7 @@ from src.server.wiring import create_production_server, setup_logging
 
 
 def test_setup_logging_creates_log_dir(tmp_path):
-    log_file = tmp_path / "subdir" / "erks.log"
+    log_file = tmp_path / "subdir" / "graph-hopper.log"
     cfg = Config.default()
     cfg.log = LogConfig(path=str(log_file), max_bytes=1024, backup_count=1)
     setup_logging(cfg)
@@ -26,7 +24,7 @@ def test_setup_logging_creates_rotating_handler(tmp_path):
     """setup_logging creates a RotatingFileHandler with the configured path."""
     import logging.handlers as lh
 
-    log_file = tmp_path / "erks.log"
+    log_file = tmp_path / "graph-hopper.log"
     cfg = Config.default()
     cfg.log = LogConfig(path=str(log_file), max_bytes=4096, backup_count=2)
     # Call directly to verify the handler object is created (not relying on basicConfig state)
@@ -40,7 +38,7 @@ def test_setup_logging_creates_rotating_handler(tmp_path):
 
 def test_setup_logging_uses_config_max_bytes(tmp_path):
     """setup_logging does not raise and the log directory is created."""
-    log_file = tmp_path / "deep" / "erks2.log"
+    log_file = tmp_path / "deep" / "graph-hopper2.log"
     cfg = Config.default()
     cfg.log = LogConfig(path=str(log_file), max_bytes=8192, backup_count=3)
     # Should not raise; directory creation is the key observable side-effect

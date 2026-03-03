@@ -1,8 +1,8 @@
-# ERKS Configuration File
+# Graph Hopper Configuration File
 #
 # Copy this file, edit the values, and point the server at it:
 #
-#   export ERKS_CONFIG_PATH=/path/to/your/config.yaml
+#   export GRAPH_HOPPER_CONFIG_PATH=/path/to/your/config.yaml
 #   uvicorn main:app --host 0.0.0.0 --port 8000
 #
 # All keys are optional – omitted keys fall back to the built-in defaults

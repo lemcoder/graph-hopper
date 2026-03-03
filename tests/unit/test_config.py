@@ -15,7 +15,6 @@ from src.config import (
     StorageConfig,
 )
 
-
 # ---------------------------------------------------------------------------
 # OrchestratorConfig validation
 # ---------------------------------------------------------------------------
@@ -261,7 +260,7 @@ def test_from_yaml_full_override(tmp_path):
           embedding_batch_size: 128
           query_timeout_ms: 2000
         log:
-          path: /tmp/erks.log
+          path: /tmp/graph-hopper.log
           max_bytes: 52428800
           backup_count: 3
         storage:
@@ -281,7 +280,7 @@ def test_from_yaml_full_override(tmp_path):
     cfg = Config.from_yaml(path)
     assert cfg.orchestrator.max_subagents == 10
     assert cfg.orchestrator.embedding_batch_size == 128
-    assert cfg.log.path == "/tmp/erks.log"
+    assert cfg.log.path == "/tmp/graph-hopper.log"
     assert cfg.log.max_bytes == 52428800
     assert cfg.storage.base_path == "/data/agents"
     assert cfg.secrets.store_type == "env"

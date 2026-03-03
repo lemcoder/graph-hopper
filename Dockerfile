@@ -16,28 +16,28 @@ RUN uv sync --frozen --no-dev
 FROM python:3.11-slim
 
 # Non-root user for security
-RUN useradd --create-home --shell /bin/bash erks
-WORKDIR /home/erks/app
+RUN useradd --create-home --shell /bin/bash graph-hopper
+WORKDIR /home/graph-hopper/app
 
 # Copy the venv and source from the builder stage
-COPY --from=builder /app/.venv /home/erks/app/.venv
-COPY --chown=erks:erks src/ ./src/
-COPY --chown=erks:erks main.py ./
+COPY --from=builder /app/.venv /home/graph-hopper/app/.venv
+COPY --chown=graph-hopper:graph-hopper src/ ./src/
+COPY --chown=graph-hopper:graph-hopper main.py ./
 
 # Make the virtualenv's binaries the default
-ENV PATH="/home/erks/app/.venv/bin:$PATH"
+ENV PATH="/home/graph-hopper/app/.venv/bin:$PATH"
 
 # Default writable paths for logs and data (can be overridden via config.yaml)
-RUN mkdir -p /home/erks/logs /home/erks/data/subagents /home/erks/data/subagents/failed \
-    && chown -R erks:erks /home/erks/logs /home/erks/data
+RUN mkdir -p /home/graph-hopper/logs /home/graph-hopper/data/subagents /home/graph-hopper/data/subagents/failed \
+    && chown -R graph-hopper:graph-hopper /home/graph-hopper/logs /home/graph-hopper/data
 
-USER erks
+USER graph-hopper
 
 EXPOSE 8000
 
-# ERKS_CONFIG_PATH can point to a mounted config file (see docker run example below).
+# GRAPH_HOPPER_CONFIG_PATH can point to a mounted config file (see docker run example below).
 # If unset the server starts with built-in defaults.
-ENV ERKS_CONFIG_PATH=""
+ENV GRAPH_HOPPER_CONFIG_PATH=""
 
 # ── Healthcheck ───────────────────────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

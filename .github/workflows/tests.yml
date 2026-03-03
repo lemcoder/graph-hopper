@@ -49,5 +49,4 @@ jobs:
         run: uv sync
 
       - name: Run tests with coverage
-        run: uv run pytest --cov=erks --cov-fail-under=90
-
+        run: uv run pytest --cov=src --cov-fail-under=90

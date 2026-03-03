@@ -19,7 +19,9 @@ from src.models import (
     SourceType,
     SubagentRecord,
     SubagentStatus,
-    ValidationError as ErksValidationError,
+)
+from src.models import (
+    ValidationError as GraphHopperValidationError,
 )
 from src.subagent.confidence import ConfidenceScorer
 from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
@@ -55,7 +57,7 @@ class InMemoryOrchestrator:
 
     def _validate_source_type(self, source_type: SourceType) -> None:
         if source_type not in ALLOWED_SOURCE_TYPES:
-            raise ErksValidationError(
+            raise GraphHopperValidationError(
                 f"Unsupported source type '{source_type}'. "
                 f"Allowed types: {', '.join(t.value for t in ALLOWED_SOURCE_TYPES)}"
             )
