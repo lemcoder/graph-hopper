@@ -7,7 +7,7 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
-from erks.models import (
+from src.models import (
     AddSourceResult,
     CapExceededError,
     ListSourcesResult,
@@ -16,7 +16,7 @@ from erks.models import (
     SourceType,
     ValidationError as ErksValidationError,
 )
-from erks.orchestrator.interface import OrchestratorInterface
+from src.orchestrator.interface import OrchestratorInterface
 
 logger = logging.getLogger(__name__)
 

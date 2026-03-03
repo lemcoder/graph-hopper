@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 
-from erks.subagent.ingestion import Chunk, DeterministicEmbedder
-from erks.subagent.retriever import Retriever
-from erks.subagent.vector_store import VectorStore
+from src.subagent.ingestion import Chunk, DeterministicEmbedder
+from src.subagent.retriever import Retriever
+from src.subagent.vector_store import VectorStore
 
 
 # ---------------------------------------------------------------------------

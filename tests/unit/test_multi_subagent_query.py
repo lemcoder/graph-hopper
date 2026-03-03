@@ -7,14 +7,14 @@ from datetime import datetime, timezone
 
 import pytest
 
-from erks.config import Config
-from erks.models import SourceConfig, SourceType, SubagentStatus
-from erks.orchestrator.in_memory import InMemoryOrchestrator
-from erks.subagent.confidence import ConfidenceScorer
-from erks.subagent.ingestion import Chunk, DeterministicEmbedder
-from erks.subagent.retriever import Retriever
-from erks.subagent.subagent import MockLLM, Subagent, SubagentResponse, SourceMetadata
-from erks.subagent.vector_store import VectorStore
+from src.config import Config
+from src.models import SourceConfig, SourceType, SubagentStatus
+from src.orchestrator.in_memory import InMemoryOrchestrator
+from src.subagent.confidence import ConfidenceScorer
+from src.subagent.ingestion import Chunk, DeterministicEmbedder
+from src.subagent.retriever import Retriever
+from src.subagent.subagent import MockLLM, Subagent, SubagentResponse, SourceMetadata
+from src.subagent.vector_store import VectorStore
 
 
 # ---------------------------------------------------------------------------
@@ -151,8 +151,12 @@ def config():
 
 @pytest.fixture
 def orchestrator(config):
+<<<<<<< HEAD
     from erks.subagent.ingestion import IngestionPipeline
 
+=======
+    from src.subagent.ingestion import IngestionPipeline
+>>>>>>> aedfc8d (Rename ERKS to graph hopper)
     pipeline = IngestionPipeline(DeterministicEmbedder(seed="test"))
     return InMemoryOrchestrator(config, pipeline, llm=MockLLM("mock answer"))
 
@@ -204,9 +208,9 @@ async def test_orchestrator_query_returns_highest_confidence():
     sa_low.aquery = _low_query  # type: ignore[method-assign]
     sa_high.aquery = _high_query  # type: ignore[method-assign]
 
-    from erks.models import SubagentRecord
-    from erks.orchestrator.in_memory import InMemoryOrchestrator
-    from erks.subagent.ingestion import IngestionPipeline
+    from src.models import SubagentRecord
+    from src.orchestrator.in_memory import InMemoryOrchestrator
+    from src.subagent.ingestion import IngestionPipeline
 
     pipeline = IngestionPipeline(DeterministicEmbedder())
     orch = InMemoryOrchestrator(cfg, pipeline, llm=MockLLM())
@@ -244,9 +248,9 @@ async def test_orchestrator_query_timeout_is_handled():
 
     sa_fast = _build_subagent("fast", ["some text"], llm_response="fast answer")
 
-    from erks.models import SubagentRecord
-    from erks.orchestrator.in_memory import InMemoryOrchestrator
-    from erks.subagent.ingestion import IngestionPipeline
+    from src.models import SubagentRecord
+    from src.orchestrator.in_memory import InMemoryOrchestrator
+    from src.subagent.ingestion import IngestionPipeline
 
     pipeline = IngestionPipeline(DeterministicEmbedder())
     orch = InMemoryOrchestrator(cfg, pipeline, llm=MockLLM())
@@ -282,9 +286,9 @@ async def test_orchestrator_query_error_in_subagent_is_ignored():
     sa_err.aquery = _raise  # type: ignore[method-assign]
     sa_ok = _build_subagent("ok", ["text"], llm_response="ok answer")
 
-    from erks.models import SubagentRecord
-    from erks.orchestrator.in_memory import InMemoryOrchestrator
-    from erks.subagent.ingestion import IngestionPipeline
+    from src.models import SubagentRecord
+    from src.orchestrator.in_memory import InMemoryOrchestrator
+    from src.subagent.ingestion import IngestionPipeline
 
     pipeline = IngestionPipeline(DeterministicEmbedder())
     orch = InMemoryOrchestrator(cfg, pipeline, llm=MockLLM())
@@ -310,9 +314,9 @@ async def test_orchestrator_query_tie_breaking_by_created_at_then_subagent_id():
     """When confidence is equal, earlier created_at wins; then subagent_id asc."""
     cfg = _cfg(query_timeout_ms=5000)
 
-    from erks.models import SubagentRecord
-    from erks.orchestrator.in_memory import InMemoryOrchestrator
-    from erks.subagent.ingestion import IngestionPipeline
+    from src.models import SubagentRecord
+    from src.orchestrator.in_memory import InMemoryOrchestrator
+    from src.subagent.ingestion import IngestionPipeline
 
     pipeline = IngestionPipeline(DeterministicEmbedder())
     orch = InMemoryOrchestrator(cfg, pipeline, llm=MockLLM())

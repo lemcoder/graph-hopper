@@ -9,8 +9,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from erks.config import Config
-from erks.models import (
+from src.config import Config
+from src.models import (
     AddSourceResult,
     CapExceededError,
     ListSourcesResult,
@@ -21,11 +21,11 @@ from erks.models import (
     SubagentStatus,
     ValidationError as ErksValidationError,
 )
-from erks.subagent.confidence import ConfidenceScorer
-from erks.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
-from erks.subagent.retriever import Retriever
-from erks.subagent.subagent import MockLLM, Subagent, SubagentResponse
-from erks.subagent.vector_store import VectorStore
+from src.subagent.confidence import ConfidenceScorer
+from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
+from src.subagent.retriever import Retriever
+from src.subagent.subagent import MockLLM, Subagent, SubagentResponse
+from src.subagent.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 

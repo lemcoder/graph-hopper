@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
-from erks.subagent.confidence import ConfidenceScorer
-from erks.subagent.retriever import Retriever
+from src.subagent.confidence import ConfidenceScorer
+from src.subagent.retriever import Retriever
 
 
 # ---------------------------------------------------------------------------

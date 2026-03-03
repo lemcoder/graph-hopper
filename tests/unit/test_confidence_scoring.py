@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from erks.subagent.confidence import ConfidenceScorer
+from src.subagent.confidence import ConfidenceScorer
 
 
 @pytest.fixture

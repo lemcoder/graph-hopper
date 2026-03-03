@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import pytest
 from erks.config import Config
 from erks.models import (
@@ -5,9 +6,24 @@ from erks.models import (
     SourceType,
     SubagentStatus,
     CapExceededError,
+=======
+import asyncio
+
+import pytest
+
+from src.config import Config
+from src.models import (
+    CapExceededError,
+    SourceConfig,
+    SourceType,
+    SubagentStatus,
+>>>>>>> aedfc8d (Rename ERKS to graph hopper)
 )
-from erks.orchestrator.in_memory import InMemoryOrchestrator
-from erks.subagent.ingestion import IngestionPipeline, DeterministicEmbedder
+from src.models import (
+    ValidationError as GraphHopperValidationError,
+)
+from src.orchestrator.in_memory import InMemoryOrchestrator
+from src.subagent.ingestion import DeterministicEmbedder, IngestionPipeline
 
 
 @pytest.fixture
@@ -144,7 +160,7 @@ async def test_query_with_ready_agent(orchestrator):
 
 @pytest.mark.asyncio
 async def test_deterministic_embedder():
-    from erks.subagent.ingestion import DeterministicEmbedder
+    from src.subagent.ingestion import DeterministicEmbedder
 
     emb = DeterministicEmbedder(seed="test", dim=64)
     v1 = emb.embed(["hello world"])

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from erks.subagent.ingestion import Chunk, EmbeddingInterface
-from erks.subagent.vector_store import VectorStore
+from src.subagent.ingestion import Chunk, EmbeddingInterface
+from src.subagent.vector_store import VectorStore
 
 
 class Retriever:
